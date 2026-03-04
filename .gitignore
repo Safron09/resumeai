@@ -34,3 +34,5 @@ staticfiles/
 
 # Claude Code
 .claude/
+CLAUDE.md
+.clauderc
