@@ -1,0 +1,135 @@
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
+
+export default function Register() {
+  const [form, setForm] = useState({ firstName: '', lastName: '', email: '', password: '' })
+
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    console.log('Register:', form)
+  }
+
+  return (
+    <div className="min-h-screen bg-bg flex items-center justify-center px-4">
+      <div className="w-full max-w-md">
+        {/* Logo */}
+        <div className="text-center mb-10">
+          <span className="text-2xl font-semibold tracking-tight">
+            Resume<span className="text-accent">AI</span>
+          </span>
+          <p className="text-gray-400 mt-2 text-sm">Create your free account</p>
+        </div>
+
+        <div className="bg-surface rounded-2xl p-8 shadow-xl border border-white/5">
+          {/* Google button */}
+          <button
+            type="button"
+            className="w-full flex items-center justify-center gap-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl py-3 px-4 text-sm font-medium text-gray-200 transition-colors mb-6"
+          >
+            <GoogleIcon />
+            Sign up with Google
+          </button>
+
+          <div className="relative mb-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-white/10" />
+            </div>
+            <div className="relative flex justify-center text-xs text-gray-500">
+              <span className="px-3 bg-surface">or continue with email</span>
+            </div>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-1.5">First name</label>
+                <input
+                  type="text"
+                  name="firstName"
+                  value={form.firstName}
+                  onChange={handleChange}
+                  placeholder="Jane"
+                  required
+                  className="w-full bg-bg border border-white/10 rounded-xl px-4 py-3 text-sm text-gray-100 placeholder-gray-600 focus:outline-none focus:border-accent/60 focus:ring-1 focus:ring-accent/30 transition-colors"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-1.5">Last name</label>
+                <input
+                  type="text"
+                  name="lastName"
+                  value={form.lastName}
+                  onChange={handleChange}
+                  placeholder="Doe"
+                  required
+                  className="w-full bg-bg border border-white/10 rounded-xl px-4 py-3 text-sm text-gray-100 placeholder-gray-600 focus:outline-none focus:border-accent/60 focus:ring-1 focus:ring-accent/30 transition-colors"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-gray-400 mb-1.5">Email</label>
+              <input
+                type="email"
+                name="email"
+                value={form.email}
+                onChange={handleChange}
+                placeholder="you@example.com"
+                required
+                className="w-full bg-bg border border-white/10 rounded-xl px-4 py-3 text-sm text-gray-100 placeholder-gray-600 focus:outline-none focus:border-accent/60 focus:ring-1 focus:ring-accent/30 transition-colors"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-gray-400 mb-1.5">Password</label>
+              <input
+                type="password"
+                name="password"
+                value={form.password}
+                onChange={handleChange}
+                placeholder="Min. 8 characters"
+                minLength={8}
+                required
+                className="w-full bg-bg border border-white/10 rounded-xl px-4 py-3 text-sm text-gray-100 placeholder-gray-600 focus:outline-none focus:border-accent/60 focus:ring-1 focus:ring-accent/30 transition-colors"
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="w-full bg-accent hover:bg-accent/90 text-bg font-semibold rounded-xl py-3 text-sm transition-colors mt-2"
+            >
+              Create account
+            </button>
+          </form>
+
+          <p className="text-center text-xs text-gray-600 mt-5">
+            By creating an account you agree to our{' '}
+            <Link to="/terms" className="text-gray-400 hover:text-accent">Terms</Link>
+            {' '}and{' '}
+            <Link to="/privacy" className="text-gray-400 hover:text-accent">Privacy Policy</Link>
+          </p>
+        </div>
+
+        <p className="text-center text-sm text-gray-500 mt-6">
+          Already have an account?{' '}
+          <Link to="/login" className="text-accent hover:underline font-medium">
+            Sign in
+          </Link>
+        </p>
+      </div>
+    </div>
+  )
+}
+
+function GoogleIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+      <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
+      <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/>
+      <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
+      <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
+    </svg>
+  )
+}
