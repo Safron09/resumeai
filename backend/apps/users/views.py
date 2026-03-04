@@ -1,21 +1,30 @@
+import logging
+
+import stripe
+from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.utils.encoding import force_bytes, force_str
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.conf import settings
+from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.views import TokenRefreshView
 from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import CustomUser
 from .serializers import (
-    RegisterSerializer, LoginSerializer, UserSerializer,
-    ForgotPasswordSerializer, ResetPasswordSerializer,
+    ForgotPasswordSerializer,
+    LoginSerializer,
+    RegisterSerializer,
+    ResetPasswordSerializer,
+    UserSerializer,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def _jwt_response(user):
@@ -63,6 +72,28 @@ class MeView(APIView):
 
     def get(self, request):
         return Response(UserSerializer(request.user).data)
+
+    def delete(self, request):
+        request.user.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class ChangePasswordView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        current = request.data.get('current_password', '')
+        new_pw = request.data.get('new_password', '')
+
+        if not request.user.check_password(current):
+            return Response({'detail': 'Current password is incorrect.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if len(new_pw) < 8:
+            return Response({'detail': 'New password must be at least 8 characters.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        request.user.set_password(new_pw)
+        request.user.save()
+        return Response({'detail': 'Password updated successfully.'})
 
 
 class ForgotPasswordView(APIView):
@@ -113,3 +144,79 @@ class ResetPasswordView(APIView):
         user.set_password(data['password'])
         user.save()
         return Response({'detail': 'Password updated successfully.'})
+
+
+# ── Stripe Billing ────────────────────────────────────────────────────────────
+
+class CreateCheckoutSessionView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        price_id = getattr(settings, 'STRIPE_PRO_PRICE_ID', '')
+        secret_key = getattr(settings, 'STRIPE_SECRET_KEY', '')
+
+        if not price_id or not secret_key:
+            return Response(
+                {'detail': 'Stripe is not configured on this server.'},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+        stripe.api_key = secret_key
+
+        try:
+            session = stripe.checkout.Session.create(
+                payment_method_types=['card'],
+                mode='subscription',
+                customer_email=request.user.email,
+                line_items=[{'price': price_id, 'quantity': 1}],
+                success_url=f"{settings.FRONTEND_URL}/settings/billing?upgraded=true",
+                cancel_url=f"{settings.FRONTEND_URL}/settings/billing",
+                metadata={'user_id': str(request.user.pk)},
+            )
+            return Response({'url': session.url})
+        except stripe.error.StripeError as exc:
+            logger.error('Stripe checkout error: %s', exc)
+            return Response({'detail': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class StripeWebhookView(APIView):
+    permission_classes = (AllowAny,)
+    authentication_classes = ()
+
+    def post(self, request):
+        secret_key = getattr(settings, 'STRIPE_SECRET_KEY', '')
+        webhook_secret = getattr(settings, 'STRIPE_WEBHOOK_SECRET', '')
+
+        if not secret_key:
+            return Response(status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+        stripe.api_key = secret_key
+        payload = request.body
+        sig_header = request.META.get('HTTP_STRIPE_SIGNATURE', '')
+
+        try:
+            event = stripe.Webhook.construct_event(payload, sig_header, webhook_secret)
+        except (ValueError, stripe.error.SignatureVerificationError) as exc:
+            logger.warning('Stripe webhook invalid: %s', exc)
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        if event['type'] == 'checkout.session.completed':
+            session = event['data']['object']
+            user_id = session.get('metadata', {}).get('user_id')
+            if user_id:
+                try:
+                    user = CustomUser.objects.get(pk=user_id)
+                    user.plan = 'pro'
+                    user.save(update_fields=['plan'])
+                    logger.info('Upgraded user %s to pro via Stripe', user_id)
+                except CustomUser.DoesNotExist:
+                    pass
+
+        elif event['type'] in ('customer.subscription.deleted', 'customer.subscription.paused'):
+            # Downgrade — find user by customer email
+            customer_email = event['data']['object'].get('customer_email')
+            if customer_email:
+                CustomUser.objects.filter(email=customer_email, plan='pro').update(plan='free')
+
+        return Response({'received': True})

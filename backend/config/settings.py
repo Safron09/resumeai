@@ -2,6 +2,7 @@ from pathlib import Path
 from datetime import timedelta
 from dotenv import load_dotenv
 import dj_database_url
+import cloudinary
 import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent  # project root
@@ -26,6 +27,8 @@ INSTALLED_APPS = [
     'social_django',
     # Local
     'apps.users',
+    'apps.profiles',
+    'apps.generator',
 ]
 
 MIDDLEWARE = [
@@ -135,6 +138,25 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
+
+# ── Celery ───────────────────────────────────────────────────────────────────
+CELERY_BROKER_URL = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TIMEZONE = 'UTC'
+
+# ── Cloudinary ────────────────────────────────────────────────────────────────
+cloudinary.config(cloudinary_url=os.getenv('CLOUDINARY_URL', ''))
+
+# ── Anthropic ─────────────────────────────────────────────────────────────────
+ANTHROPIC_API_KEY = os.getenv('ANTHROPIC_API_KEY', '')
+
+# ── Stripe ────────────────────────────────────────────────────────────────────
+STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY', '')
+STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET', '')
+STRIPE_PRO_PRICE_ID = os.getenv('STRIPE_PRO_PRICE_ID', '')
 
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
