@@ -1,20 +1,53 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import api from '../lib/api'
+import useAuthStore from '../store/authStore'
 
 export default function Register() {
-  const [form, setForm] = useState({ firstName: '', lastName: '', email: '', password: '' })
+  const navigate = useNavigate()
+  const setAuth = useAuthStore((s) => s.setAuth)
+  const [form, setForm] = useState({ first_name: '', last_name: '', email: '', password: '' })
+  const [errors, setErrors] = useState({})
+  const [loading, setLoading] = useState(false)
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value })
+    setErrors({ ...errors, [e.target.name]: undefined, general: undefined })
+  }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    console.log('Register:', form)
+    setLoading(true)
+    setErrors({})
+    try {
+      const { data } = await api.post('/api/auth/register/', form)
+      setAuth(data.user, data.access, data.refresh)
+      navigate('/onboarding', { replace: true })
+    } catch (err) {
+      const data = err.response?.data
+      if (err.response?.status >= 500 || !data) {
+        setErrors({ general: 'Something went wrong. Please try again.' })
+      } else if (typeof data === 'object' && !Array.isArray(data)) {
+        const mapped = {}
+        Object.entries(data).forEach(([k, v]) => {
+          mapped[k] = Array.isArray(v) ? v[0] : v
+        })
+        setErrors(mapped)
+      } else {
+        setErrors({ general: String(data) })
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleGoogle = () => {
+    window.location.href = `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/login/google-oauth2/`
   }
 
   return (
     <div className="min-h-screen bg-bg flex items-center justify-center px-4">
       <div className="w-full max-w-md">
-        {/* Logo */}
         <div className="text-center mb-10">
           <span className="text-2xl font-semibold tracking-tight">
             Resume<span className="text-accent">AI</span>
@@ -23,101 +56,96 @@ export default function Register() {
         </div>
 
         <div className="bg-surface rounded-2xl p-8 shadow-xl border border-white/5">
-          {/* Google button */}
           <button
             type="button"
+            onClick={handleGoogle}
             className="w-full flex items-center justify-center gap-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl py-3 px-4 text-sm font-medium text-gray-200 transition-colors mb-6"
           >
             <GoogleIcon />
             Sign up with Google
           </button>
 
-          <div className="relative mb-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-white/10" />
-            </div>
-            <div className="relative flex justify-center text-xs text-gray-500">
-              <span className="px-3 bg-surface">or continue with email</span>
-            </div>
-          </div>
+          <Divider />
+
+          {errors.general && (
+            <p className="text-red-400 text-sm mb-4 text-center">{errors.general}</p>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-medium text-gray-400 mb-1.5">First name</label>
+              <Field label="First name" error={errors.first_name}>
                 <input
-                  type="text"
-                  name="firstName"
-                  value={form.firstName}
-                  onChange={handleChange}
-                  placeholder="Jane"
-                  required
-                  className="w-full bg-bg border border-white/10 rounded-xl px-4 py-3 text-sm text-gray-100 placeholder-gray-600 focus:outline-none focus:border-accent/60 focus:ring-1 focus:ring-accent/30 transition-colors"
+                  type="text" name="first_name" value={form.first_name} onChange={handleChange}
+                  placeholder="Jane" required className={inputClass(errors.first_name)}
                 />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-400 mb-1.5">Last name</label>
+              </Field>
+              <Field label="Last name" error={errors.last_name}>
                 <input
-                  type="text"
-                  name="lastName"
-                  value={form.lastName}
-                  onChange={handleChange}
-                  placeholder="Doe"
-                  required
-                  className="w-full bg-bg border border-white/10 rounded-xl px-4 py-3 text-sm text-gray-100 placeholder-gray-600 focus:outline-none focus:border-accent/60 focus:ring-1 focus:ring-accent/30 transition-colors"
+                  type="text" name="last_name" value={form.last_name} onChange={handleChange}
+                  placeholder="Doe" required className={inputClass(errors.last_name)}
                 />
-              </div>
+              </Field>
             </div>
 
-            <div>
-              <label className="block text-xs font-medium text-gray-400 mb-1.5">Email</label>
+            <Field label="Email" error={errors.email}>
               <input
-                type="email"
-                name="email"
-                value={form.email}
-                onChange={handleChange}
-                placeholder="you@example.com"
-                required
-                className="w-full bg-bg border border-white/10 rounded-xl px-4 py-3 text-sm text-gray-100 placeholder-gray-600 focus:outline-none focus:border-accent/60 focus:ring-1 focus:ring-accent/30 transition-colors"
+                type="email" name="email" value={form.email} onChange={handleChange}
+                placeholder="you@example.com" required className={inputClass(errors.email)}
               />
-            </div>
+            </Field>
 
-            <div>
-              <label className="block text-xs font-medium text-gray-400 mb-1.5">Password</label>
+            <Field label="Password" error={errors.password}>
               <input
-                type="password"
-                name="password"
-                value={form.password}
-                onChange={handleChange}
-                placeholder="Min. 8 characters"
-                minLength={8}
-                required
-                className="w-full bg-bg border border-white/10 rounded-xl px-4 py-3 text-sm text-gray-100 placeholder-gray-600 focus:outline-none focus:border-accent/60 focus:ring-1 focus:ring-accent/30 transition-colors"
+                type="password" name="password" value={form.password} onChange={handleChange}
+                placeholder="Min. 8 characters" minLength={8} required
+                className={inputClass(errors.password)}
               />
-            </div>
+            </Field>
 
             <button
-              type="submit"
-              className="w-full bg-accent hover:bg-accent/90 text-bg font-semibold rounded-xl py-3 text-sm transition-colors mt-2"
+              type="submit" disabled={loading}
+              className="w-full bg-accent hover:bg-accent/90 disabled:opacity-60 text-bg font-semibold rounded-xl py-3 text-sm transition-colors mt-2"
             >
-              Create account
+              {loading ? 'Creating account…' : 'Create account'}
             </button>
           </form>
 
           <p className="text-center text-xs text-gray-600 mt-5">
-            By creating an account you agree to our{' '}
-            <Link to="/terms" className="text-gray-400 hover:text-accent">Terms</Link>
-            {' '}and{' '}
+            By signing up you agree to our{' '}
+            <Link to="/terms" className="text-gray-400 hover:text-accent">Terms</Link> and{' '}
             <Link to="/privacy" className="text-gray-400 hover:text-accent">Privacy Policy</Link>
           </p>
         </div>
 
         <p className="text-center text-sm text-gray-500 mt-6">
           Already have an account?{' '}
-          <Link to="/login" className="text-accent hover:underline font-medium">
-            Sign in
-          </Link>
+          <Link to="/login" className="text-accent hover:underline font-medium">Sign in</Link>
         </p>
+      </div>
+    </div>
+  )
+}
+
+function inputClass(error) {
+  return `w-full bg-bg border ${error ? 'border-red-500/60' : 'border-white/10'} rounded-xl px-4 py-3 text-sm text-gray-100 placeholder-gray-600 focus:outline-none focus:border-accent/60 focus:ring-1 focus:ring-accent/30 transition-colors`
+}
+
+function Field({ label, error, children }) {
+  return (
+    <div>
+      <label className="block text-xs font-medium text-gray-400 mb-1.5">{label}</label>
+      {children}
+      {error && <p className="text-red-400 text-xs mt-1">{error}</p>}
+    </div>
+  )
+}
+
+function Divider() {
+  return (
+    <div className="relative mb-6">
+      <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/10" /></div>
+      <div className="relative flex justify-center text-xs text-gray-500">
+        <span className="px-3 bg-surface">or continue with email</span>
       </div>
     </div>
   )

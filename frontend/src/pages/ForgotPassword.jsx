@@ -1,20 +1,34 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import api from '../lib/api'
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('')
   const [submitted, setSubmitted] = useState(false)
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    console.log('Forgot password:', email)
-    setSubmitted(true)
+    setLoading(true)
+    setError('')
+    try {
+      await api.post('/api/auth/forgot-password/', { email })
+      setSubmitted(true)
+    } catch (err) {
+      if (err.response?.status >= 500 || !err.response) {
+        setError('Something went wrong. Please try again.')
+      } else {
+        setError(err.response.data?.detail || 'Something went wrong.')
+      }
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
     <div className="min-h-screen bg-bg flex items-center justify-center px-4">
       <div className="w-full max-w-md">
-        {/* Logo */}
         <div className="text-center mb-10">
           <span className="text-2xl font-semibold tracking-tight">
             Resume<span className="text-accent">AI</span>
@@ -34,10 +48,10 @@ export default function ForgotPassword() {
               <p className="text-sm text-gray-400 leading-relaxed">
                 We sent a reset link to{' '}
                 <span className="text-gray-200 font-medium">{email}</span>.
-                It expires in 30 minutes.
+                It expires in 1 hour.
               </p>
               <button
-                onClick={() => setSubmitted(false)}
+                onClick={() => { setSubmitted(false); setEmail('') }}
                 className="mt-6 text-sm text-gray-500 hover:text-accent transition-colors"
               >
                 Try a different email
@@ -46,25 +60,23 @@ export default function ForgotPassword() {
           ) : (
             <>
               <p className="text-sm text-gray-400 mb-6 leading-relaxed">
-                Enter the email associated with your account and we'll send you a password reset link.
+                Enter the email associated with your account and we'll send you a reset link.
               </p>
+              {error && <p className="text-red-400 text-sm mb-4 text-center">{error}</p>}
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-xs font-medium text-gray-400 mb-1.5">Email</label>
                   <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com"
-                    required
+                    type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com" required
                     className="w-full bg-bg border border-white/10 rounded-xl px-4 py-3 text-sm text-gray-100 placeholder-gray-600 focus:outline-none focus:border-accent/60 focus:ring-1 focus:ring-accent/30 transition-colors"
                   />
                 </div>
                 <button
-                  type="submit"
-                  className="w-full bg-accent hover:bg-accent/90 text-bg font-semibold rounded-xl py-3 text-sm transition-colors"
+                  type="submit" disabled={loading}
+                  className="w-full bg-accent hover:bg-accent/90 disabled:opacity-60 text-bg font-semibold rounded-xl py-3 text-sm transition-colors"
                 >
-                  Send reset link
+                  {loading ? 'Sending…' : 'Send reset link'}
                 </button>
               </form>
             </>
@@ -72,9 +84,7 @@ export default function ForgotPassword() {
         </div>
 
         <p className="text-center text-sm text-gray-500 mt-6">
-          <Link to="/login" className="text-accent hover:underline font-medium">
-            ← Back to sign in
-          </Link>
+          <Link to="/login" className="text-accent hover:underline font-medium">← Back to sign in</Link>
         </p>
       </div>
     </div>
