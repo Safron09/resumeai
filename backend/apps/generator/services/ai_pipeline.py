@@ -16,25 +16,36 @@ logger = logging.getLogger(__name__)
 PASS1_SYSTEM = (
     "Given this professional profile JSON and job description, rewrite the resume tailored to the JD. "
     "Emphasize matching skills, rewrite bullets with metrics where possible. "
-    "Return JSON only: { summary, experience: [{company, title, dates, bullets}], education, skills }"
+    "Return JSON only with this exact structure: "
+    "{ \"name\": \"from profile\", \"headline\": \"from profile\", "
+    "\"contact\": {\"email\": \"\", \"phone\": \"\", \"location\": \"\", \"linkedin\": \"\", \"github\": \"\"}, "
+    "\"summary\": \"\", "
+    "\"experience\": [{\"company\": \"\", \"title\": \"\", \"dates\": \"\", \"bullets\": []}], "
+    "\"education\": [{\"school\": \"\", \"degree\": \"\", \"dates\": \"\"}], "
+    "\"skills\": [] }. "
+    "Copy name, headline, and contact exactly from the profile — do not modify them."
 )
 
 PASS2_SYSTEM = (
     "Optimize this resume JSON for ATS systems. Match keyword density to the JD, "
     "use standard section headers, remove any formatting ATS can't parse. "
+    "Preserve the name, headline, and contact fields exactly as-is. "
     "Return same JSON structure."
 )
 
 PASS3_SYSTEM = (
     "Rewrite this resume at humanization level {level}/5. "
     "1 = formal/corporate, 5 = natural/conversational with varied sentence structure. "
+    "Preserve the name, headline, and contact fields exactly as-is. "
     "Return same JSON structure."
 )
 
 PASS4_SYSTEM = (
     "Add subtle strategic imperfections to make this resume appear hand-written. "
     "Vary one date format slightly, soften one bullet, add one slightly informal phrase. "
-    "Do not make it worse — just less AI-perfect. Return same JSON structure."
+    "Do not make it worse — just less AI-perfect. "
+    "Preserve the name, headline, and contact fields exactly as-is. "
+    "Return same JSON structure."
 )
 
 PASS5_SYSTEM = (
@@ -106,6 +117,14 @@ async def _pipeline_async(
         f"Resume:\n{json.dumps(resume)}\n\nJob Description:\n{job_description}",
         max_tokens=256,
     )
+
+    # Always guarantee header fields from profile (in case any pass dropped them)
+    resume.setdefault('name', profile_data.get('name', ''))
+    resume.setdefault('headline', profile_data.get('headline', ''))
+    resume.setdefault('contact', profile_data.get('contact', {}))
+    # If a pass overwrote contact with empty dict, restore from profile
+    if not any(resume.get('contact', {}).values()):
+        resume['contact'] = profile_data.get('contact', {})
 
     return resume, scores
 

@@ -19,12 +19,29 @@ logger = logging.getLogger(__name__)
 
 CLAUDE_SYSTEM_PROMPT = (
     "Extract a structured professional profile from this LinkedIn PDF text. "
-    "Return JSON only with: name, headline, summary, "
-    "experience (array: company, title, dates, bullets), "
-    "education (array: school, degree, dates), "
-    "skills (array of strings). "
+    "Return JSON only with this exact structure: "
+    "{ "
+    "\"name\": \"full name\", "
+    "\"headline\": \"current job title or professional headline\", "
+    "\"contact\": { "
+    "  \"email\": \"email address or empty string\", "
+    "  \"phone\": \"phone number or empty string\", "
+    "  \"location\": \"city, state/country or empty string\", "
+    "  \"linkedin\": \"full LinkedIn URL or empty string\", "
+    "  \"github\": \"full GitHub URL or empty string\" "
+    "}, "
+    "\"summary\": \"professional summary\", "
+    "\"experience\": [{\"company\": \"\", \"title\": \"\", \"dates\": \"\", \"bullets\": []}], "
+    "\"education\": [{\"school\": \"\", \"degree\": \"\", \"dates\": \"\"}], "
+    "\"skills\": [\"skill1\", \"skill2\"] "
+    "}. "
     "Return only valid JSON, no other text."
 )
+
+
+def _cloudinary_configured() -> bool:
+    import os
+    return bool(os.getenv('CLOUDINARY_URL', '').strip())
 
 
 def _upload_to_cloudinary(content: bytes, folder: str, public_id: str) -> str:
@@ -72,18 +89,21 @@ class ProfileUploadView(APIView):
         linkedin_content = linkedin_pdf.read()
         user_id = request.user.id
 
-        # Upload LinkedIn PDF to Cloudinary
-        try:
-            linkedin_url = _upload_to_cloudinary(
-                linkedin_content, 'resumeai/linkedin', f'linkedin_{user_id}'
-            )
-        except Exception as e:
-            logger.error('Cloudinary upload failed: %s', e)
-            return Response({'detail': 'File upload failed.'}, status=status.HTTP_502_BAD_GATEWAY)
+        # Upload LinkedIn PDF to Cloudinary (skipped if CLOUDINARY_URL is not set)
+        linkedin_url = ''
+        if _cloudinary_configured():
+            try:
+                linkedin_url = _upload_to_cloudinary(
+                    linkedin_content, 'resumeai/linkedin', f'linkedin_{user_id}'
+                )
+            except Exception as e:
+                logger.warning('Cloudinary upload failed (non-fatal): %s', e)
+        else:
+            logger.info('CLOUDINARY_URL not set — skipping LinkedIn PDF upload')
 
         # Upload optional resume PDF
         resume_url = ''
-        if resume_pdf:
+        if resume_pdf and _cloudinary_configured():
             try:
                 resume_url = _upload_to_cloudinary(
                     resume_pdf.read(), 'resumeai/resumes', f'resume_{user_id}'

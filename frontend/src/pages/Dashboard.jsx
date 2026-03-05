@@ -96,10 +96,24 @@ function ScoreBadge({ label, value, color }) {
 // ── Result card ───────────────────────────────────────────────────────────────
 
 function ResultCard({ result, jobId }) {
-  const handleDownload = (fmt) => {
-    // Open download URL in new tab — browser handles as attachment
-    const url = `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/generate/${jobId}/download/${fmt}/`
-    window.open(url, '_blank')
+  const [downloading, setDownloading] = useState({})
+
+  const handleDownload = async (fmt) => {
+    setDownloading((d) => ({ ...d, [fmt]: true }))
+    try {
+      const resp = await api.get(`/api/generate/${jobId}/download/${fmt}/`, { responseType: 'blob' })
+      const blob = new Blob([resp.data])
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `resume.${fmt}`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch {
+      // silently ignore — user can retry
+    } finally {
+      setDownloading((d) => ({ ...d, [fmt]: false }))
+    }
   }
 
   return (
@@ -118,21 +132,31 @@ function ResultCard({ result, jobId }) {
       <div className="flex gap-3">
         <button
           onClick={() => handleDownload('pdf')}
-          className="flex-1 flex items-center justify-center gap-2 bg-accent hover:bg-accent/90 text-bg font-semibold text-sm py-2.5 rounded-xl transition-colors"
+          disabled={downloading.pdf}
+          className="flex-1 flex items-center justify-center gap-2 bg-accent hover:bg-accent/90 disabled:opacity-60 text-bg font-semibold text-sm py-2.5 rounded-xl transition-colors"
         >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-          </svg>
-          Download PDF
+          {downloading.pdf ? (
+            <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+          ) : (
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+            </svg>
+          )}
+          {downloading.pdf ? 'Preparing…' : 'Download PDF'}
         </button>
         <button
           onClick={() => handleDownload('docx')}
-          className="flex-1 flex items-center justify-center gap-2 border border-white/10 hover:border-white/20 text-gray-300 font-semibold text-sm py-2.5 rounded-xl transition-colors"
+          disabled={downloading.docx}
+          className="flex-1 flex items-center justify-center gap-2 border border-white/10 hover:border-white/20 disabled:opacity-60 text-gray-300 font-semibold text-sm py-2.5 rounded-xl transition-colors"
         >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-          </svg>
-          Download DOCX
+          {downloading.docx ? (
+            <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+          ) : (
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+            </svg>
+          )}
+          {downloading.docx ? 'Preparing…' : 'Download DOCX'}
         </button>
       </div>
 
@@ -231,7 +255,11 @@ export default function Dashboard() {
       if (err.response?.status === 403) {
         navigate('/pricing')
       } else {
-        setError(err.response?.data?.detail || 'Something went wrong. Please try again.')
+        const msg =
+          err.response?.data?.detail ||
+          err.response?.data?.non_field_errors?.[0] ||
+          (err.response ? `Server error ${err.response.status}` : 'Network error — is the backend running?')
+        setError(msg)
       }
       setGenerating(false)
       setGenStatus('')

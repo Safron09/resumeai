@@ -32,9 +32,19 @@ export default function HistoryDetail() {
       .finally(() => setLoading(false))
   }, [id])
 
-  const handleDownload = (fmt) => {
-    const url = `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/generate/${id}/download/${fmt}/`
-    window.open(url, '_blank')
+  const handleDownload = async (fmt) => {
+    try {
+      const resp = await api.get(`/api/generate/${id}/download/${fmt}/`, { responseType: 'blob' })
+      const blob = new Blob([resp.data])
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `resume_${id}.${fmt}`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch {
+      // silently ignore
+    }
   }
 
   const handleRegenerate = () => {
