@@ -4,6 +4,7 @@ import useAuthStore from '../store/authStore'
 const NAV = [
   { label: 'Dashboard', to: '/dashboard' },
   { label: 'History', to: '/history' },
+  { label: 'Update Profile', to: '/onboarding' },
   { label: 'Settings', to: '/settings' },
 ]
 

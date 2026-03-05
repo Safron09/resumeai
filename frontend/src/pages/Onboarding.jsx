@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { Navigate, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import api from '../lib/api'
 import useAuthStore from '../store/authStore'
 
@@ -90,15 +90,12 @@ function Dropzone({ label, hint, file, onFile, required = false }) {
 
 export default function Onboarding() {
   const navigate = useNavigate()
-  const { hasProfile, setHasProfile } = useAuthStore()
+  const { setHasProfile } = useAuthStore()
 
   const [linkedinFile, setLinkedinFile] = useState(null)
   const [resumeFile, setResumeFile] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-
-  // Redirect if profile already exists
-  if (hasProfile) return <Navigate to="/dashboard" replace />
 
   const handleSubmit = async () => {
     if (!linkedinFile || loading) return

@@ -118,12 +118,12 @@ async def _pipeline_async(
         max_tokens=256,
     )
 
-    # Always guarantee header fields from profile (in case any pass dropped them)
-    resume.setdefault('name', profile_data.get('name', ''))
-    resume.setdefault('headline', profile_data.get('headline', ''))
-    resume.setdefault('contact', profile_data.get('contact', {}))
-    # If a pass overwrote contact with empty dict, restore from profile
-    if not any(resume.get('contact', {}).values()):
+    # Always guarantee header fields from profile (handles null, missing, or empty values)
+    if not resume.get('name'):
+        resume['name'] = profile_data.get('name', '')
+    if not resume.get('headline'):
+        resume['headline'] = profile_data.get('headline', '')
+    if not resume.get('contact') or not any(resume['contact'].values()):
         resume['contact'] = profile_data.get('contact', {})
 
     return resume, scores
