@@ -1,3 +1,5 @@
+my_workspace/
+
 # Python
 __pycache__/
 *.py[cod]
@@ -34,5 +36,3 @@ staticfiles/
 
 # Claude Code
 .claude/
-
-.my_workspace
