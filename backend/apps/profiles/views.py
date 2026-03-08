@@ -82,44 +82,52 @@ class ProfileUploadView(APIView):
     def post(self, request):
         linkedin_pdf = request.FILES.get('linkedin_pdf')
         resume_pdf = request.FILES.get('resume_pdf')
+        plain_text = request.data.get('plain_text', '').strip()
 
-        if not linkedin_pdf:
-            return Response({'detail': 'linkedin_pdf is required.'}, status=status.HTTP_400_BAD_REQUEST)
+        if not linkedin_pdf and not plain_text:
+            return Response({'detail': 'Provide either linkedin_pdf or plain_text.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        linkedin_content = linkedin_pdf.read()
+        if plain_text and len(plain_text) < 50:
+            return Response({'detail': 'Plain text must be at least 50 characters.'}, status=status.HTTP_400_BAD_REQUEST)
+
         user_id = request.user.id
-
-        # Upload LinkedIn PDF to Cloudinary (skipped if CLOUDINARY_URL is not set)
         linkedin_url = ''
-        if _cloudinary_configured():
-            try:
-                linkedin_url = _upload_to_cloudinary(
-                    linkedin_content, 'resumeai/linkedin', f'linkedin_{user_id}'
-                )
-            except Exception as e:
-                logger.warning('Cloudinary upload failed (non-fatal): %s', e)
-        else:
-            logger.info('CLOUDINARY_URL not set — skipping LinkedIn PDF upload')
-
-        # Upload optional resume PDF
         resume_url = ''
-        if resume_pdf and _cloudinary_configured():
+
+        if linkedin_pdf:
+            linkedin_content = linkedin_pdf.read()
+
+            # Upload LinkedIn PDF to Cloudinary (skipped if CLOUDINARY_URL is not set)
+            if _cloudinary_configured():
+                try:
+                    linkedin_url = _upload_to_cloudinary(
+                        linkedin_content, 'resumeai/linkedin', f'linkedin_{user_id}'
+                    )
+                except Exception as e:
+                    logger.warning('Cloudinary upload failed (non-fatal): %s', e)
+            else:
+                logger.info('CLOUDINARY_URL not set — skipping LinkedIn PDF upload')
+
+            # Upload optional resume PDF
+            if resume_pdf and _cloudinary_configured():
+                try:
+                    resume_url = _upload_to_cloudinary(
+                        resume_pdf.read(), 'resumeai/resumes', f'resume_{user_id}'
+                    )
+                except Exception as e:
+                    logger.warning('Resume upload failed (non-fatal): %s', e)
+
+            # Extract text from PDF
             try:
-                resume_url = _upload_to_cloudinary(
-                    resume_pdf.read(), 'resumeai/resumes', f'resume_{user_id}'
-                )
+                text = _extract_pdf_text(linkedin_content)
             except Exception as e:
-                logger.warning('Resume upload failed (non-fatal): %s', e)
+                logger.error('PDF parsing failed: %s', e)
+                return Response({'detail': 'Could not read PDF. Make sure it is a valid LinkedIn export.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Parse LinkedIn PDF text
-        try:
-            text = _extract_pdf_text(linkedin_content)
-        except Exception as e:
-            logger.error('PDF parsing failed: %s', e)
-            return Response({'detail': 'Could not read PDF. Make sure it is a valid LinkedIn export.'}, status=status.HTTP_400_BAD_REQUEST)
-
-        if not text.strip():
-            return Response({'detail': 'PDF appears to be empty or image-only.'}, status=status.HTTP_400_BAD_REQUEST)
+            if not text.strip():
+                return Response({'detail': 'PDF appears to be empty or image-only.'}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            text = plain_text
 
         # Parse with Claude
         try:

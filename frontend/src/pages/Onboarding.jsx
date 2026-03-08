@@ -92,19 +92,27 @@ export default function Onboarding() {
   const navigate = useNavigate()
   const { setHasProfile } = useAuthStore()
 
+  const [inputMode, setInputMode] = useState('pdf') // 'pdf' | 'text'
   const [linkedinFile, setLinkedinFile] = useState(null)
   const [resumeFile, setResumeFile] = useState(null)
+  const [plainText, setPlainText] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
+  const canSubmit = inputMode === 'pdf' ? !!linkedinFile : plainText.trim().length >= 50
+
   const handleSubmit = async () => {
-    if (!linkedinFile || loading) return
+    if (!canSubmit || loading) return
     setLoading(true)
     setError('')
     try {
       const form = new FormData()
-      form.append('linkedin_pdf', linkedinFile)
-      if (resumeFile) form.append('resume_pdf', resumeFile)
+      if (inputMode === 'pdf') {
+        form.append('linkedin_pdf', linkedinFile)
+        if (resumeFile) form.append('resume_pdf', resumeFile)
+      } else {
+        form.append('plain_text', plainText.trim())
+      }
       await api.post('/api/profile/upload/', form, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
@@ -132,73 +140,120 @@ export default function Onboarding() {
         {/* Progress indicator */}
         <div className="flex items-center gap-3 mb-8">
           <div className="flex-1 h-1 bg-accent rounded-full" />
-          <div className={`flex-1 h-1 rounded-full transition-colors ${linkedinFile ? 'bg-accent' : 'bg-white/10'}`} />
+          <div className={`flex-1 h-1 rounded-full transition-colors ${canSubmit ? 'bg-accent' : 'bg-white/10'}`} />
         </div>
 
         <div className="bg-surface border border-white/5 rounded-2xl p-8 space-y-8">
 
-          {/* Section 1 — LinkedIn PDF */}
+          {/* Section 1 — Input mode toggle */}
           <div>
             <div className="flex items-start gap-3 mb-5">
               <div className="w-7 h-7 rounded-full bg-accent/15 border border-accent/30 flex items-center justify-center flex-shrink-0 mt-0.5">
                 <span className="text-accent text-xs font-bold">1</span>
               </div>
-              <div>
-                <h2 className="text-base font-semibold text-gray-100">Upload your LinkedIn PDF</h2>
+              <div className="flex-1">
+                <h2 className="text-base font-semibold text-gray-100">Your professional profile</h2>
                 <p className="text-sm text-gray-500 mt-0.5">
                   This becomes your permanent profile. All future resumes are generated from it.
                 </p>
               </div>
             </div>
 
-            <Dropzone
-              label="LinkedIn Profile PDF"
-              hint="LinkedIn → Me → Save to PDF"
-              file={linkedinFile}
-              onFile={setLinkedinFile}
-              required
-            />
-
-            {/* How to export guide */}
-            <div className="mt-3 flex items-start gap-2 bg-white/[0.03] border border-white/5 rounded-xl px-4 py-3">
-              <svg className="w-4 h-4 text-gray-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
-              </svg>
-              <p className="text-xs text-gray-500 leading-relaxed">
-                On LinkedIn: click <span className="text-gray-300">Me</span> → <span className="text-gray-300">View Profile</span> → <span className="text-gray-300">More</span> → <span className="text-gray-300">Save to PDF</span>
-              </p>
+            {/* Mode toggle */}
+            <div className="flex bg-white/5 rounded-xl p-1 mb-5">
+              <button
+                onClick={() => setInputMode('pdf')}
+                className={`flex-1 text-sm py-2 rounded-lg font-medium transition-colors ${
+                  inputMode === 'pdf'
+                    ? 'bg-white/10 text-gray-100'
+                    : 'text-gray-500 hover:text-gray-300'
+                }`}
+              >
+                Upload LinkedIn PDF
+              </button>
+              <button
+                onClick={() => setInputMode('text')}
+                className={`flex-1 text-sm py-2 rounded-lg font-medium transition-colors ${
+                  inputMode === 'text'
+                    ? 'bg-white/10 text-gray-100'
+                    : 'text-gray-500 hover:text-gray-300'
+                }`}
+              >
+                Paste plain text
+              </button>
             </div>
-          </div>
 
-          {/* Divider */}
-          <div className="border-t border-white/5" />
-
-          {/* Section 2 — Existing resume */}
-          <div>
-            <div className="flex items-start gap-3 mb-5">
-              <div className="w-7 h-7 rounded-full bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <span className="text-gray-500 text-xs font-bold">2</span>
-              </div>
+            {inputMode === 'pdf' ? (
+              <>
+                <Dropzone
+                  label="LinkedIn Profile PDF"
+                  hint="LinkedIn → Me → Save to PDF"
+                  file={linkedinFile}
+                  onFile={setLinkedinFile}
+                  required
+                />
+                {/* How to export guide */}
+                <div className="mt-3 flex items-start gap-2 bg-white/[0.03] border border-white/5 rounded-xl px-4 py-3">
+                  <svg className="w-4 h-4 text-gray-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+                  </svg>
+                  <p className="text-xs text-gray-500 leading-relaxed">
+                    On LinkedIn: click <span className="text-gray-300">Me</span> → <span className="text-gray-300">View Profile</span> → <span className="text-gray-300">More</span> → <span className="text-gray-300">Save to PDF</span>
+                  </p>
+                </div>
+              </>
+            ) : (
               <div>
-                <h2 className="text-base font-semibold text-gray-100">Upload your current resume</h2>
-                <p className="text-sm text-gray-500 mt-0.5">
-                  Optional — helps us write better bullets by learning your existing style.
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-sm font-medium text-gray-200">Profile text</p>
+                  <span className="text-[10px] font-medium text-accent bg-accent/10 px-2 py-0.5 rounded-full">Required</span>
+                </div>
+                <textarea
+                  value={plainText}
+                  onChange={(e) => setPlainText(e.target.value)}
+                  placeholder={`Paste your profile info here — name, job title, work experience, education, skills, contact details...\n\nExample:\nJohn Smith\nSenior Software Engineer\njohn@email.com | github.com/john | linkedin.com/in/john | New York, NY\n\nExperience:\nAcme Corp — Senior Engineer (2020–present)\n- Built scalable APIs serving 10M requests/day\n...`}
+                  rows={12}
+                  className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-3 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-accent/40 resize-none leading-relaxed"
+                />
+                <p className={`text-xs mt-1.5 text-right transition-colors ${
+                  plainText.trim().length < 50 ? 'text-gray-600' : 'text-gray-500'
+                }`}>
+                  {plainText.trim().length} chars {plainText.trim().length < 50 && `(min 50)`}
                 </p>
               </div>
-            </div>
-
-            <Dropzone
-              label="Existing Resume"
-              hint="Optional — helps us improve your bullets"
-              file={resumeFile}
-              onFile={setResumeFile}
-            />
+            )}
           </div>
+
+          {/* Divider + Section 2 — only shown in PDF mode */}
+          {inputMode === 'pdf' && (
+            <>
+              <div className="border-t border-white/5" />
+              <div>
+                <div className="flex items-start gap-3 mb-5">
+                  <div className="w-7 h-7 rounded-full bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-gray-500 text-xs font-bold">2</span>
+                  </div>
+                  <div>
+                    <h2 className="text-base font-semibold text-gray-100">Upload your current resume</h2>
+                    <p className="text-sm text-gray-500 mt-0.5">
+                      Optional — helps us write better bullets by learning your existing style.
+                    </p>
+                  </div>
+                </div>
+                <Dropzone
+                  label="Existing Resume"
+                  hint="Optional — helps us improve your bullets"
+                  file={resumeFile}
+                  onFile={setResumeFile}
+                />
+              </div>
+            </>
+          )}
 
           {/* CTA */}
           <button
             onClick={handleSubmit}
-            disabled={!linkedinFile || loading}
+            disabled={!canSubmit || loading}
             className="w-full flex items-center justify-center gap-3 bg-accent hover:bg-accent/90 disabled:opacity-40 disabled:cursor-not-allowed text-bg font-semibold rounded-xl py-3.5 text-sm transition-colors"
           >
             {loading ? (
@@ -222,9 +277,9 @@ export default function Onboarding() {
           {error && (
             <p className="text-center text-xs text-red-400 -mt-4">{error}</p>
           )}
-          {!linkedinFile && !error && (
+          {!canSubmit && !error && (
             <p className="text-center text-xs text-gray-600 -mt-4">
-              Upload your LinkedIn PDF to continue
+              {inputMode === 'pdf' ? 'Upload your LinkedIn PDF to continue' : 'Paste at least 50 characters to continue'}
             </p>
           )}
         </div>
