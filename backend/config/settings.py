@@ -1,13 +1,8 @@
 from pathlib import Path
-<<<<<<< HEAD
 from datetime import timedelta
 from dotenv import load_dotenv
 import dj_database_url
 import cloudinary
-=======
-from dotenv import load_dotenv
-import dj_database_url
->>>>>>> main
 import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent  # project root
@@ -15,13 +10,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent  # project root
 load_dotenv(BASE_DIR / '.env')
 
 SECRET_KEY = os.environ['SECRET_KEY']
-<<<<<<< HEAD
-DEBUG = os.getenv('DEBUG', 'False') == 'True'
-=======
-
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
->>>>>>> main
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
 
 INSTALLED_APPS = [
@@ -33,7 +23,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     # Third-party
     'rest_framework',
-<<<<<<< HEAD
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'social_django',
@@ -45,13 +34,6 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
-=======
-    # Local
-    'apps.users',
-]
-
-MIDDLEWARE = [
->>>>>>> main
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -59,10 +41,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-<<<<<<< HEAD
     'social_django.middleware.SocialAuthExceptionMiddleware',
-=======
->>>>>>> main
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -78,11 +57,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-<<<<<<< HEAD
                 'social_django.context_processors.backends',
                 'social_django.context_processors.login_redirect',
-=======
->>>>>>> main
             ],
         },
     },
@@ -90,10 +66,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-<<<<<<< HEAD
-=======
-# Database — DEV_DB in development, DATABASE_URL in production
->>>>>>> main
 _db_url = os.getenv('DATABASE_URL') or os.getenv('DEV_DB')
 DATABASES = {
     'default': dj_database_url.parse(_db_url, conn_max_age=600, ssl_require=True)
@@ -101,7 +73,6 @@ DATABASES = {
 
 AUTH_USER_MODEL = 'users.CustomUser'
 
-<<<<<<< HEAD
 # ── JWT ──────────────────────────────────────────────────────────────────────
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -162,13 +133,6 @@ EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'ResumeAI <noreply@resumeai.com>')
 
-=======
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [],
-    'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.IsAuthenticated'],
-}
-
->>>>>>> main
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
@@ -176,7 +140,6 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-<<<<<<< HEAD
 # ── Celery ───────────────────────────────────────────────────────────────────
 CELERY_BROKER_URL = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
 CELERY_RESULT_BACKEND = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
@@ -196,15 +159,9 @@ STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY', '')
 STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET', '')
 STRIPE_PRO_PRICE_ID = os.getenv('STRIPE_PRO_PRICE_ID', '')
 
-=======
->>>>>>> main
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
-<<<<<<< HEAD
-=======
-
->>>>>>> main
 STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
