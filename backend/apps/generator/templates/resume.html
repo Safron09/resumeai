@@ -21,6 +21,11 @@
     color: #111;
     margin-bottom: 3px;
   }
+  .headline {
+    font-size: 11pt;
+    color: #444;
+    margin-bottom: 4px;
+  }
   .contact-line {
     font-size: 9pt;
     color: #555;
@@ -70,6 +75,7 @@
   {% if template_name == 'Modern' %}
   .header { background: #0f172a; color: #f8fafc; padding: 16px 18px; margin: -0.7in -0.75in 14px -0.75in; }
   .header h1 { color: #f8fafc; }
+  .headline { color: #94a3b8; }
   .contact-line { color: #94a3b8; }
   .section-title { color: #0f172a; border-color: #0f172a; }
   {% endif %}
@@ -88,6 +94,9 @@
   {% if content.get('name') %}
   <h1>{{ content['name'] }}</h1>
   {% endif %}
+  {% if content.get('headline') %}
+  <div class="headline">{{ content['headline'] }}</div>
+  {% endif %}
 
   {% set contact = content.get('contact', {}) %}
   {% if contact %}
@@ -96,6 +105,7 @@
     {% if contact.get('phone') %}<span>{{ contact['phone'] }}</span>{% endif %}
     {% if contact.get('location') %}<span>{{ contact['location'] }}</span>{% endif %}
     {% if contact.get('linkedin') %}<span>{{ contact['linkedin'] }}</span>{% endif %}
+    {% if contact.get('github') %}<span>{{ contact['github'] }}</span>{% endif %}
   </div>
   {% endif %}
 </div>
