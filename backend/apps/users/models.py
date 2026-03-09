@@ -45,4 +45,8 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     def generations_remaining(self):
         if self.plan == self.Plan.FREE:
             return max(0, 5 - self.generations_used)
+<<<<<<< HEAD
         return None
+=======
+        return None  # unlimited for Pro/Teams
+>>>>>>> main
