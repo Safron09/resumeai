@@ -24,7 +24,7 @@ export default function AppLayout({ children }) {
         <div className="max-w-6xl mx-auto px-6 flex items-center justify-between h-14">
           <div className="flex items-center gap-8">
             <Link to="/" className="text-base font-semibold tracking-tight">
-              Resume<span className="text-accent">AI</span>
+              Prose<span className="text-accent">Hire</span>
             </Link>
             <nav className="hidden sm:flex items-center gap-1">
               {NAV.map(({ label, to }) => (

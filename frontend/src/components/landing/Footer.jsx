@@ -14,7 +14,7 @@ export default function Footer() {
     <footer className="border-t border-white/5 py-12 px-6">
       <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
         <Link to="/" className="text-base font-semibold tracking-tight">
-          Resume<span className="text-accent">AI</span>
+          Prose<span className="text-accent">Hire</span>
         </Link>
 
         <nav className="flex flex-wrap justify-center gap-x-6 gap-y-2">
@@ -29,7 +29,7 @@ export default function Footer() {
           ))}
         </nav>
 
-        <p className="text-xs text-gray-700">© {new Date().getFullYear()} ResumeAI</p>
+        <p className="text-xs text-gray-700">© {new Date().getFullYear()} ProseHire</p>
       </div>
     </footer>
   )

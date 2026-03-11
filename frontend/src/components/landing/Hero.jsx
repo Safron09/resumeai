@@ -53,7 +53,7 @@ export default function Hero() {
             <span className="w-3 h-3 rounded-full bg-red-500/60" />
             <span className="w-3 h-3 rounded-full bg-yellow-500/60" />
             <span className="w-3 h-3 rounded-full bg-green-500/60" />
-            <span className="ml-3 text-xs text-gray-600">ResumeAI — dashboard</span>
+            <span className="ml-3 text-xs text-gray-600">ProseHire — dashboard</span>
           </div>
           {/* Fake UI */}
           <div className="p-6 space-y-4">

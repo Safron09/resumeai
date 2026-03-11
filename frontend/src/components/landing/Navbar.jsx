@@ -10,7 +10,7 @@ export default function Navbar() {
       <div className="max-w-6xl mx-auto px-6 flex items-center justify-between h-16">
         {/* Logo */}
         <Link to="/" className="text-lg font-semibold tracking-tight">
-          Resume<span className="text-accent">AI</span>
+          Prose<span className="text-accent">Hire</span>
         </Link>
 
         {/* Nav links */}
