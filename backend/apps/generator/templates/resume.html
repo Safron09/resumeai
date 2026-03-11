@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  @page { size: Letter; margin: 0.7in 0.75in 0.7in 0.75in; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 10.5pt;
+    color: #1a1a1a;
+    line-height: 1.45;
+  }
+
+  /* ── Header ──────────────────────── */
+  .header { margin-bottom: 14px; }
+  .header h1 {
+    font-size: 21pt;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    color: #111;
+    margin-bottom: 3px;
+  }
+  .headline {
+    font-size: 11pt;
+    color: #444;
+    margin-bottom: 4px;
+  }
+  .contact-line {
+    font-size: 9pt;
+    color: #555;
+  }
+  .contact-line span + span::before {
+    content: ' \00B7 ';
+    margin: 0 4px;
+    color: #aaa;
+  }
+
+  /* ── Sections ────────────────────── */
+  .section { margin-bottom: 14px; }
+  .section-title {
+    font-size: 9.5pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.9px;
+    color: #333;
+    border-bottom: 1.5px solid #ccc;
+    padding-bottom: 2px;
+    margin-bottom: 8px;
+  }
+
+  /* ── Entries ─────────────────────── */
+  .entry { margin-bottom: 9px; }
+  .entry-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .entry-left { flex: 1; }
+  .entry-title { font-weight: 700; font-size: 10.5pt; }
+  .entry-org { font-style: italic; color: #444; font-size: 10pt; }
+  .entry-date { font-size: 9.5pt; color: #666; white-space: nowrap; }
+  .bullets { margin-left: 14px; margin-top: 3px; }
+  .bullets li { margin-bottom: 1.5px; font-size: 10pt; }
+
+  /* ── Summary ─────────────────────── */
+  .summary-text { font-size: 10.5pt; color: #222; }
+
+  /* ── Skills ──────────────────────── */
+  .skills-text { font-size: 10pt; color: #222; }
+
+  /* ── Modern template overrides ───── */
+  {% if template_name == 'Modern' %}
+  .header { background: #0f172a; color: #f8fafc; padding: 16px 18px; margin: -0.7in -0.75in 14px -0.75in; }
+  .header h1 { color: #f8fafc; }
+  .headline { color: #94a3b8; }
+  .contact-line { color: #94a3b8; }
+  .section-title { color: #0f172a; border-color: #0f172a; }
+  {% endif %}
+
+  /* ── Minimal template overrides ──── */
+  {% if template_name == 'Minimal' %}
+  .header h1 { font-size: 18pt; }
+  .section-title { border-bottom: none; color: #888; font-size: 8.5pt; letter-spacing: 1.2px; }
+  {% endif %}
+</style>
+</head>
+<body>
+
+{# ── Header ─────────────────────────────────────────────────── #}
+<div class="header">
+  {% if content.get('name') %}
+  <h1>{{ content['name'] }}</h1>
+  {% endif %}
+  {% if content.get('headline') %}
+  <div class="headline">{{ content['headline'] }}</div>
+  {% endif %}
+
+  {% set contact = content.get('contact', {}) %}
+  {% if contact %}
+  <div class="contact-line">
+    {% if contact.get('email') %}<span>{{ contact['email'] }}</span>{% endif %}
+    {% if contact.get('phone') %}<span>{{ contact['phone'] }}</span>{% endif %}
+    {% if contact.get('location') %}<span>{{ contact['location'] }}</span>{% endif %}
+    {% if contact.get('linkedin') %}<span>{{ contact['linkedin'] }}</span>{% endif %}
+    {% if contact.get('github') %}<span>{{ contact['github'] }}</span>{% endif %}
+  </div>
+  {% endif %}
+</div>
+
+{# ── Summary ─────────────────────────────────────────────────── #}
+{% if content.get('summary') %}
+<div class="section">
+  <div class="section-title">Summary</div>
+  <p class="summary-text">{{ content['summary'] }}</p>
+</div>
+{% endif %}
+
+{# ── Experience ──────────────────────────────────────────────── #}
+{% if content.get('experience') %}
+<div class="section">
+  <div class="section-title">Experience</div>
+  {% for job in content['experience'] %}
+  <div class="entry">
+    <div class="entry-header">
+      <div class="entry-left">
+        <span class="entry-title">{{ job.get('title', '') }}</span>
+        {% if job.get('company') %}
+        <span class="entry-org"> &mdash; {{ job['company'] }}</span>
+        {% endif %}
+      </div>
+      {% if job.get('dates') %}
+      <span class="entry-date">{{ job['dates'] }}</span>
+      {% endif %}
+    </div>
+    {% if job.get('bullets') %}
+    <ul class="bullets">
+      {% for bullet in job['bullets'] %}
+      <li>{{ bullet }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+{# ── Education ───────────────────────────────────────────────── #}
+{% if content.get('education') %}
+<div class="section">
+  <div class="section-title">Education</div>
+  {% set edu_list = content['education'] if content['education'] is iterable and content['education'] is not string else [content['education']] %}
+  {% for edu in edu_list %}
+  <div class="entry">
+    {% if edu is mapping %}
+    <div class="entry-header">
+      <div class="entry-left">
+        <span class="entry-title">{{ edu.get('degree', '') }}</span>
+        {% if edu.get('school') %}
+        <span class="entry-org"> &mdash; {{ edu['school'] }}</span>
+        {% endif %}
+      </div>
+      {% if edu.get('dates') %}
+      <span class="entry-date">{{ edu['dates'] }}</span>
+      {% endif %}
+    </div>
+    {% else %}
+    <p>{{ edu }}</p>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+{# ── Skills ──────────────────────────────────────────────────── #}
+{% if content.get('skills') %}
+<div class="section">
+  <div class="section-title">Skills</div>
+  <p class="skills-text">
+    {% if content['skills'] is iterable and content['skills'] is not string %}
+    {{ content['skills'] | join(', ') }}
+    {% else %}
+    {{ content['skills'] }}
+    {% endif %}
+  </p>
+</div>
+{% endif %}
+
+</body>
+</html>
