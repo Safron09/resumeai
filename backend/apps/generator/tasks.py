@@ -4,7 +4,6 @@ from celery import shared_task
 
 from .models import ResumeJob, ResumeResult
 from .services.ai_pipeline import run_pipeline
-from .services.export import export_resume
 
 logger = logging.getLogger(__name__)
 
@@ -36,16 +35,12 @@ def run_generation_pipeline(self, job_id: int):
             imperfection_mode=job.imperfection_mode,
         )
 
-        pdf_url, docx_url = export_resume(resume_content, job.id, template_name=job.template)
-
         ResumeResult.objects.create(
             job=job,
             content=resume_content,
             ats_score=int(scores.get('ats_score', 0)),
             human_score=int(scores.get('human_score', 0)),
             keyword_match=int(scores.get('keyword_match', 0)),
-            pdf_url=pdf_url,
-            docx_url=docx_url,
         )
 
         job.status = ResumeJob.Status.DONE
