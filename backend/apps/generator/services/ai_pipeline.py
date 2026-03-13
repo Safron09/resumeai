@@ -65,7 +65,7 @@ def _strip_fences(text: str) -> str:
 
 async def _claude(client: anthropic.AsyncAnthropic, system: str, content: str, max_tokens: int = 4096) -> dict:
     message = await client.messages.create(
-        model='claude-sonnet-4-6',
+        model='claude-haiku-4-5-20251001',
         max_tokens=max_tokens,
         system=system,
         messages=[{'role': 'user', 'content': content}],
