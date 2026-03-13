@@ -11,6 +11,7 @@ import History from './pages/History'
 import HistoryDetail from './pages/HistoryDetail'
 import Settings from './pages/Settings'
 import Billing from './pages/Billing'
+import Contact from './pages/Contact'
 import GuestRoute from './components/GuestRoute'
 import ProtectedRoute from './components/ProtectedRoute'
 
@@ -20,6 +21,8 @@ export default function App() {
       {/* Public */}
       <Route path="/" element={<Landing />} />
       <Route path="/pricing" element={<Pricing />} />
+      <Route path="/contact" element={<Contact mode="contact" />} />
+      <Route path="/report-bug" element={<Contact mode="bug" />} />
       <Route path="/auth/callback" element={<AuthCallback />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
 

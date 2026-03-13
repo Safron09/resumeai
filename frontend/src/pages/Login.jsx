@@ -50,7 +50,7 @@ export default function Login() {
       <div className="w-full max-w-md">
         <div className="text-center mb-10">
           <span className="text-2xl font-semibold tracking-tight">
-            Resume<span className="text-accent">AI</span>
+            Prose<span className="text-accent">Hire</span>
           </span>
           <p className="text-gray-400 mt-2 text-sm">Sign in to your account</p>
         </div>

@@ -18,6 +18,7 @@ export default function Navbar() {
           <a href="#features" className="text-sm text-gray-400 hover:text-gray-100 transition-colors">Features</a>
           <a href="#how-it-works" className="text-sm text-gray-400 hover:text-gray-100 transition-colors">How it works</a>
           <Link to="/pricing" className="text-sm text-gray-400 hover:text-gray-100 transition-colors">Pricing</Link>
+          <Link to="/contact" className="text-sm text-gray-400 hover:text-gray-100 transition-colors">Contact Us</Link>
         </div>
 
         {/* CTA */}

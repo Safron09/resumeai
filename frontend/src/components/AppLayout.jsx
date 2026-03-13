@@ -44,6 +44,12 @@ export default function AppLayout({ children }) {
           </div>
           <div className="flex items-center gap-4">
             <span className="text-xs text-gray-600 hidden sm:block truncate max-w-[180px]">{user?.email}</span>
+            <Link
+              to="/report-bug"
+              className="text-xs text-gray-500 hover:text-gray-300 transition-colors hidden sm:block"
+            >
+              Report a Bug
+            </Link>
             <button
               onClick={handleLogout}
               className="text-xs text-gray-500 hover:text-gray-300 transition-colors"

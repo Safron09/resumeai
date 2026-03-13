@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../lib/api'
 import useAuthStore from '../store/authStore'
+import AppLayout from '../components/AppLayout'
 
 // ── Dropzone ──────────────────────────────────────────────────────────────────
 
@@ -127,12 +128,9 @@ export default function Onboarding() {
   }
 
   return (
-    <div className="min-h-screen bg-bg flex flex-col items-center justify-center px-4 py-16">
-      {/* Logo */}
+    <AppLayout>
+    <div className="flex flex-col items-center justify-center px-4 py-16">
       <div className="mb-10 text-center">
-        <span className="text-2xl font-semibold tracking-tight">
-          Resume<span className="text-accent">AI</span>
-        </span>
         <p className="text-gray-400 mt-2 text-sm">Let's build your profile — just once</p>
       </div>
 
@@ -285,5 +283,6 @@ export default function Onboarding() {
         </div>
       </div>
     </div>
+    </AppLayout>
   )
 }
