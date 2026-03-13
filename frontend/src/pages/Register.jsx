@@ -49,9 +49,9 @@ export default function Register() {
     <div className="min-h-screen bg-bg flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-10">
-          <span className="text-2xl font-semibold tracking-tight">
+          <Link to="/" className="text-2xl font-semibold tracking-tight">
             Prose<span className="text-accent">Hire</span>
-          </span>
+          </Link>
           <p className="text-gray-400 mt-2 text-sm">Create your free account</p>
         </div>
 
