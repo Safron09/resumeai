@@ -220,3 +220,28 @@ class StripeWebhookView(APIView):
                 CustomUser.objects.filter(email=customer_email, plan='pro').update(plan='free')
 
         return Response({'received': True})
+
+
+class ContactView(APIView):
+    permission_classes = (AllowAny,)
+
+    def post(self, request):
+        name = request.data.get('name', '').strip()
+        email = request.data.get('email', '').strip()
+        message = request.data.get('message', '').strip()
+        mode = request.data.get('mode', 'contact')
+
+        if not name or not email or not message:
+            return Response({'detail': 'All fields are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        subject = f"{'Bug Report' if mode == 'bug' else 'Contact'} from {name} — ProseHire"
+        body = f"From: {name} <{email}>\n\n{message}"
+        recipient = settings.DEFAULT_FROM_EMAIL
+
+        try:
+            send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, [recipient], fail_silently=False)
+        except Exception:
+            logger.exception('ContactView: failed to send email')
+            return Response({'detail': 'Failed to send message.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        return Response({'detail': 'Message sent.'})

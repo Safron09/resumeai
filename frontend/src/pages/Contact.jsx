@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import api from '../lib/api'
 
 export default function Contact({ mode = 'contact' }) {
   const isBug = mode === 'bug'
@@ -7,24 +8,22 @@ export default function Contact({ mode = 'contact' }) {
   const [form, setForm] = useState({ name: '', email: '', message: '' })
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
-    // mailto fallback — no backend needed
-    const subject = isBug
-      ? encodeURIComponent('Bug Report — ProseHire')
-      : encodeURIComponent('Contact — ProseHire')
-    const body = encodeURIComponent(
-      `Name: ${form.name}\nEmail: ${form.email}\n\n${form.message}`
-    )
-    window.location.href = `mailto:safron@prosehire.com?subject=${subject}&body=${body}`
-    setTimeout(() => {
+    setError('')
+    try {
+      await api.post('/api/auth/contact/', { ...form, mode })
       setSubmitted(true)
+    } catch {
+      setError('Failed to send message. Please try again.')
+    } finally {
       setLoading(false)
-    }, 500)
+    }
   }
 
   return (
@@ -35,6 +34,13 @@ export default function Contact({ mode = 'contact' }) {
         </Link>
 
         <div className="bg-surface border border-white/5 rounded-2xl p-8">
+          <Link
+            to={isBug ? '/dashboard' : '/'}
+            className="inline-flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-300 transition-colors mb-6 block"
+          >
+            ← {isBug ? 'Back to Dashboard' : 'Back to Home'}
+          </Link>
+
           {submitted ? (
             <div className="text-center py-8">
               <div className="text-4xl mb-4">✓</div>
@@ -102,6 +108,8 @@ export default function Contact({ mode = 'contact' }) {
                     className="w-full bg-bg border border-white/10 rounded-lg px-4 py-2.5 text-sm text-gray-100 placeholder-gray-600 focus:outline-none focus:border-accent/50 transition-colors resize-none"
                   />
                 </div>
+
+                {error && <p className="text-red-400 text-sm">{error}</p>}
 
                 <button
                   type="submit"

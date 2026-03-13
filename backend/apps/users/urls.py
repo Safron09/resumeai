@@ -14,4 +14,6 @@ urlpatterns = [
     # Billing
     path('billing/checkout/', views.CreateCheckoutSessionView.as_view(), name='billing-checkout'),
     path('billing/webhook/', views.StripeWebhookView.as_view(), name='billing-webhook'),
+    # Contact
+    path('contact/', views.ContactView.as_view(), name='contact'),
 ]
